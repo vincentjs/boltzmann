@@ -62,7 +62,9 @@ uy = ((n₂ + n₅ + n₆) - (n₄ + n₇ + n₈)) / ρ
 
 # Initialize barriers
 barrier = falses(x₂, x₁)
-barrier[x₂ / 2 - 8 : x₂ / 2 + 8, x₂ / 2] = true
+
+barrier[convert(Int, 0.5 * x₂ - 8) : convert(Int, 0.5 * x₂ + 8),
+        convert(Int, 0.5 * x₂)] = true
 
 # Sites around barrier
 b₁ = circshift(barrier, [0, 1])
@@ -140,20 +142,21 @@ end
 function curl(ux, uy)
     # Compute curl of macroscopic velocity
 
-    circshift(uy, [0, -1]) - circshift(uy, [0, 1]) -
-    circshift(ux, [-1, 0]) + circshift(ux, [1, 0])
+    return circshift(uy, [0, -1]) - circshift(uy, [0, 1]) -
+           circshift(ux, [-1, 0]) + circshift(ux, [1, 0])
 
 end
 
 # Plot
 Pkg.add("PyPlot")
+using PyPlot
 
 # Set Plot
 fig = PyPlot.figure(figsize=(8,3))
-fluidImg = PyPlot.imshow(curl(ux, uy), origin='lower',
-                         norm=PyPlot.Normalize(-0.1, 0.1),
-                         cmap=PyPlot.get_cmap('jet'),
-                         interpolation='none')
+fluidImg = PyPlot.imshow(curl(ux, uy),
+                         origin="lower",
+                         cmap=PyPlot.get_cmap("jet"),
+                         interpolation="none")
 
 # Set RGBA image
 rgbaImg =  zeros(4, x₂, x₁)
@@ -172,6 +175,9 @@ function nextFrame(frame)
 
     fluidImg.set_array(curl(ux, uy))
 
+    return fluidImg, barrierImg
 end
 
+animate = PyPlot.animation.FuncAnimation(fig, nextFrame, interval=1, blit=true)
+PyPlot.show()
 
